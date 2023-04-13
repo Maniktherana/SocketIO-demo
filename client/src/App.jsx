@@ -41,9 +41,7 @@ function App() {
         }
       );
       setLoading(false);
-      console.log(toastResponse.data);
       setChat(toastResponse.data);
-      console.log(chat);
     } catch (error) {
       console.error(error);
       setLoading(false);
