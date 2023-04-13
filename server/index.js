@@ -24,7 +24,7 @@ mongoose
 
     // Add a route to retrieve all messages
     app.get("/messages", async (req, res) => {
-      const messagesCollection = mongoose.connection.collection("chat");
+      const messagesCollection = mongoose.connection.collection("messages");
       const messages = await messagesCollection
         .find()
         .sort({ timestamp: 1 })
