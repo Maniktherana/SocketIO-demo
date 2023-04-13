@@ -20,12 +20,17 @@ io.on("connection", (socket) => {
 
   socket.on("message", (payload) => {
     console.log("payload is ", payload);
-    io.emit("message", payload);
+    const message = {
+      name: payload.name,
+      message: payload.message,
+    };
+    console.log(message);
+    io.emit("message", message);
   });
 });
 
-io.listen(4000, () => {
-  console.log("server listening on port ", 4000);
+io.listen(5000, () => {
+  console.log("server listening on port ", 5000);
 });
 
 app.get("/", (req, res) => {
