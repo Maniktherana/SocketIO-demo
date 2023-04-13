@@ -11,26 +11,62 @@ const io = new Server(server, {
   },
 });
 
-const cors = require("cors");
-app.use(cors()); // add this line
+require("dotenv").config(); // Load environment variables from .env file
+const mongoose = require("mongoose");
 
-io.on("connection", (socket) => {
-  console.log("socket is: ", socket);
-  console.log("Socket is active to be connected");
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
 
-  socket.on("message", (payload) => {
-    console.log("payload is ", payload);
-    const message = {
-      name: payload.name,
-      message: payload.message,
-    };
-    console.log(message);
-    io.emit("message", message);
+    // Add a route to retrieve all messages
+    app.get("/messages", async (req, res) => {
+      const messagesCollection = mongoose.connection.collection("chat");
+      const messages = await messagesCollection
+        .find()
+        .sort({ timestamp: 1 })
+        .toArray();
+      res.json(messages);
+    });
+
+    server.listen(5000, () => {
+      console.log("Server listening on port ", 5000);
+    });
+  })
+  .catch((err) => {
+    console.error("Error connecting to MongoDB: ", err);
+    process.exit(1);
   });
+
+const messagesSchema = new mongoose.Schema({
+  name: String,
+  message: String,
+  timestamp: String,
 });
 
-io.listen(5000, () => {
-  console.log("server listening on port ", 5000);
+const Message = mongoose.model("Message", messagesSchema);
+
+io.on("connection", (socket) => {
+  console.log("Socket is active to be connected");
+
+  socket.on("message", async (payload) => {
+    console.log("payload is ", payload);
+
+    const message = new Message({
+      name: payload.name,
+      message: payload.message,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Save the message to MongoDB
+    await message.save();
+
+    // Emit the message to all connected clients
+    io.emit("message", message);
+  });
 });
 
 app.get("/", (req, res) => {
